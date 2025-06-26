@@ -1,2 +1,393 @@
-# divar-app-
-Divar-like Android app
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>اپ دیوار - افزودن خودکار آگهی از لینک دیوار</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Vazirmatn&display=swap');
+  body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Vazirmatn', sans-serif;
+    background: linear-gradient(135deg, #536976, #292e49);
+    color: #f0f0f0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+  header {
+    background: rgba(33, 150, 243, 0.9);
+    padding: 18px 24px;
+    text-align: center;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+  }
+  header h1 {
+    margin: 0;
+    font-weight: 700;
+    font-size: 2rem;
+  }
+  main {
+    flex-grow: 1;
+    padding: 30px 24px;
+    max-width: 960px;
+    margin: 0 auto;
+    width: 100%;
+  }
+  section {
+    background: rgba(255 255 255 / 0.08);
+    border-radius: 16px;
+    padding: 20px 24px;
+    margin-bottom: 40px;
+    box-shadow: 0 8px 24px rgba(0 0 0 / 0.25);
+  }
+  label {
+    font-weight: 600;
+    margin-bottom: 6px;
+    display: block;
+  }
+  input[type=text] {
+    width: 100%;
+    padding: 12px 14px;
+    border-radius: 10px;
+    border: none;
+    background: rgba(255 255 255 / 0.18);
+    color: #eee;
+    font-size: 1rem;
+    margin-bottom: 18px;
+    transition: background-color 0.3s ease;
+  }
+  input[type=text]:focus {
+    background: rgba(255 255 255 / 0.34);
+    outline: none;
+  }
+  button {
+    background: #2196f3;
+    border: none;
+    color: white;
+    font-weight: 700;
+    padding: 14px 28px;
+    border-radius: 16px;
+    font-size: 1.1rem;
+    cursor: pointer;
+    box-shadow: 0 6px 15px rgba(33, 150, 243, 0.7);
+    transition: background-color 0.3s ease, transform 0.2s ease;
+  }
+  button:hover:not(:disabled) {
+    background: #1769aa;
+    transform: scale(1.05);
+  }
+  button:disabled {
+    background: #555;
+    cursor: not-allowed;
+    box-shadow: none;
+  }
+  .ad-list {
+    max-height: 520px;
+    overflow-y: auto;
+    border-radius: 20px;
+    border: 1px solid rgba(255 255 255 / 0.24);
+    background: rgba(0 0 0 / 0.3);
+  }
+  .ad-item {
+    display: flex;
+    flex-direction: row-reverse;
+    align-items: center;
+    gap: 16px;
+    padding: 18px 24px;
+    border-bottom: 1px solid rgba(255 255 255 / 0.14);
+    cursor: pointer;
+  }
+  .ad-item:last-child {
+    border-bottom: none;
+  }
+  .ad-image {
+    flex-shrink: 0;
+    width: 100px;
+    height: 80px;
+    border-radius: 14px;
+    object-fit: cover;
+    background: #555;
+  }
+  .ad-info {
+    flex-grow: 1;
+  }
+  .ad-title {
+    font-size: 1.2rem;
+    font-weight: 800;
+    margin-bottom: 6px;
+    color: #fff;
+  }
+  .ad-meta {
+    font-size: 0.9rem;
+    color: #aaa;
+    line-height: 1.4;
+  }
+  .ad-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .ad-button {
+    background: #f44336;
+    border-radius: 14px;
+    padding: 8px 16px;
+    font-size: 0.9rem;
+    border: none;
+    color: white;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 4px 9px rgba(244, 67, 54, 0.7);
+    transition: background-color 0.3s ease, transform 0.2s ease;
+  }
+  .ad-button:hover {
+    transform: scale(1.08);
+  }
+  .filter-group {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 20px;
+    margin-bottom: 28px;
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>اپ دیوار - افزودن خودکار آگهی از لینک دیوار</h1>
+</header>
+<main>
+  <section aria-label="افزودن آگهی با لینک دیوار">
+    <h2>کپی و پیست لینک آگهی دیوار</h2>
+    <form id="linkForm">
+      <label for="adLink">لینک آگهی دیوار</label>
+      <input type="text" id="adLink" placeholder="https://divar.ir/v/..." autocomplete="off" required />
+      <button type="submit" id="fetchBtn" disabled>افزودن آگهی</button>
+    </form>
+  </section>
+  <section aria-label="جستجو و فیلتر آگهی‌ها">
+    <h2>جستجو و فیلتر آگهی‌ها</h2>
+    <div class="filter-group">
+      <input type="text" id="searchInput" placeholder="جستجو بر اساس عنوان یا توضیحات" autocomplete="off" />
+      <input type="number" id="minPriceInput" placeholder="حداقل قیمت" min="0" />
+      <input type="number" id="maxPriceInput" placeholder="حداکثر قیمت" min="0" />
+      <input type="number" id="minAreaInput" placeholder="حداقل متراژ" min="0" />
+      <input type="number" id="maxAreaInput" placeholder="حداکثر متراژ" min="0" />
+      <input type="number" id="minYearInput" placeholder="ساخت تا سال" min="1300" max="1500" />
+      <input type="number" id="maxYearInput" placeholder="ساخت از سال" min="1300" max="1500" />
+      <button id="clearFiltersBtn" style="background:#f44336;">پاکسازی فیلترها</button>
+    </div>
+  </section>
+  <section aria-label="لیست آگهی‌ها">
+    <h2>آگهی‌های ذخیره شده</h2>
+    <div class="ad-list" id="adsContainer" tabindex="0" aria-live="polite" aria-atomic="true"></div>
+  </section>
+</main>
+<script>
+  const linkInput = document.getElementById('adLink');
+  const fetchBtn = document.getElementById('fetchBtn');
+  const adsContainer = document.getElementById('adsContainer');
+
+  const searchInput = document.getElementById('searchInput');
+  const minPriceInput = document.getElementById('minPriceInput');
+  const maxPriceInput = document.getElementById('maxPriceInput');
+  const minAreaInput = document.getElementById('minAreaInput');
+  const maxAreaInput = document.getElementById('maxAreaInput');
+  const minYearInput = document.getElementById('minYearInput');
+  const maxYearInput = document.getElementById('maxYearInput');
+  const clearFiltersBtn = document.getElementById('clearFiltersBtn');
+
+  let ads = JSON.parse(localStorage.getItem('ads')) || [];
+
+  // Enable fetch button only if input looks like a divar link
+  linkInput.addEventListener('input', () => {
+    const val = linkInput.value.trim();
+    fetchBtn.disabled = !/^https:\/\/divar\.ir\/v\/[^\s]+$/i.test(val);
+  });
+
+  function saveAds() {
+    localStorage.setItem('ads', JSON.stringify(ads));
+  }
+
+  // Simulated fetch of ad data from divar link (offline)
+  function fetchAdFromLink(link) {
+    try {
+      const url = new URL(link);
+      let key = url.pathname.split('/').pop() || "";
+      if(!key) return null;
+      const hash = Array.from(key).reduce((h,c) => h + c.charCodeAt(0), 0);
+      const titles = ["آپارتمان 2 خوابه", "ویلا در شمال", "زمین مناسب ساخت", "مغازه در مرکز شهر"];
+      const prices = [1200000000, 2500000000, 500000000, 1800000000];
+      const areas = [85, 350, 500, 60];
+      const years = [1395, 1390, 1385, 1398];
+      const descriptions = [
+        "آپارتمانی نوساز با نورگیر عالی و پارکینگ اختصاصی",
+        "ویلا با استخر و سند شش دانگ در منطقه خوش آب و هوا",
+        "زمین مرغوب برای ساخت ویلا یا مجتمع مسکونی",
+        "مغازه بازسازی شده در مکان پرتردد"
+      ];
+      const locations = ["تهران، سعادت آباد", "مازندران، نوشهر", "اصفهان، خمینی شهر", "شیراز، میدان معالی آباد"];
+      const imagesSamples = [
+        ["https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/beebc992-4442-4280-90d1-e1bc6d519888.png"],
+        ["https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/93b0d12a-d74f-4caa-9180-3c4d435b21e0.png"],
+        ["https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/3ab9028a-bf8f-4f85-872d-51c2cb3e6d3a.png"],
+        ["https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/257462ff-7bb1-4344-9b2c-1eea6f618c17.png"]
+      ];
+
+      let idx = hash % titles.length;
+
+      return {
+        link: link,
+        title: titles[idx],
+        price: prices[idx],
+        area: areas[idx],
+        yearBuilt: years[idx],
+        description: descriptions[idx],
+        location: locations[idx],
+        images: imagesSamples[idx]
+      };
+    } catch {
+      return null;
+    }
+  }
+
+  function createAdElement(ad, index) {
+    const div = document.createElement('div');
+    div.classList.add('ad-item');
+    div.title = "برای رفتن به آگهی در دیوار کلیک کنید";
+
+    // وقتی روی کل آیتم کلیک شد، به لینک اصلی آگهی برویم
+    div.addEventListener('click', (e) => {
+      // اگر روی دکمه حذف کلیک نشده بود، لینک باز شود
+      if (!e.target.classList.contains('ad-button')) {
+        window.open(ad.link, '_blank');
+      }
+    });
+
+    const img = document.createElement('img');
+    img.classList.add('ad-image');
+    img.src = ad.images && ad.images.length > 0 ? ad.images[0] : 'https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/bb4d7a48-e148-460a-b037-417e4c3921e6.png';
+    img.alt = ad.title;
+
+    const info = document.createElement('div');
+    info.classList.add('ad-info');
+
+    const title = document.createElement('h3');
+    title.classList.add('ad-title');
+    title.textContent = ad.title;
+
+    const meta = document.createElement('p');
+    meta.classList.add('ad-meta');
+    meta.innerHTML =
+      `قیمت: ${Number(ad.price).toLocaleString()} تومان<br>` +
+      `متراژ: ${ad.area} متر مربع<br>` +
+      `سال ساخت: ${ad.yearBuilt || 'ثبت نشده'}<br>` +
+      `موقعیت: ${ad.location || 'ثبت نشده'}<br>` +
+      (ad.description ? `توضیحات: ${ad.description}<br>` : '');
+
+    info.appendChild(title);
+    info.appendChild(meta);
+
+    const actions = document.createElement('div');
+    actions.classList.add('ad-actions');
+
+    const deleteBtn = document.createElement('button');
+    deleteBtn.classList.add('ad-button');
+    deleteBtn.textContent = 'حذف';
+    deleteBtn.addEventListener('click', (event) => {
+      event.stopPropagation(); // جلوگیری از فعال شدن لینک کلیک کلی
+      deleteAd(index);
+    });
+
+    actions.appendChild(deleteBtn);
+
+    div.appendChild(img);
+    div.appendChild(info);
+    div.appendChild(actions);
+
+    return div;
+  }
+
+  function renderAds(filteredAds = null) {
+    const list = filteredAds || ads;
+    adsContainer.innerHTML = '';
+    if(list.length === 0) {
+      adsContainer.textContent = 'آگهی‌ای یافت نشد.';
+      return;
+    }
+    list.forEach((ad, idx) => {
+      adsContainer.appendChild(createAdElement(ad, idx));
+    });
+  }
+
+  function deleteAd(idx) {
+    if (confirm('آیا از حذف این آگهی مطمئن هستید؟')) {
+      ads.splice(idx, 1);
+      saveAds();
+      renderAds();
+    }
+  }
+
+  function applyFilters() {
+    let filtered = ads.filter(ad => {
+      const searchVal = searchInput.value.trim().toLowerCase();
+      if(searchVal && !(
+        ad.title.toLowerCase().includes(searchVal) ||
+        (ad.description && ad.description.toLowerCase().includes(searchVal))
+      )) return false;
+
+      if(minPriceInput.value && ad.price < Number(minPriceInput.value)) return false;
+      if(maxPriceInput.value && ad.price > Number(maxPriceInput.value)) return false;
+      if(minAreaInput.value && ad.area < Number(minAreaInput.value)) return false;
+      if(maxAreaInput.value && ad.area > Number(maxAreaInput.value)) return false;
+      if(minYearInput.value && (ad.yearBuilt === null || ad.yearBuilt > Number(minYearInput.value))) return false;
+      if(maxYearInput.value && (ad.yearBuilt === null || ad.yearBuilt < Number(maxYearInput.value))) return false;
+
+      return true;
+    });
+    renderAds(filtered);
+  }
+
+  [searchInput, minPriceInput, maxPriceInput, minAreaInput, maxAreaInput, minYearInput, maxYearInput].forEach(el => {
+    el.addEventListener('input', () => applyFilters());
+  });
+
+  clearFiltersBtn.addEventListener('click', () => {
+    searchInput.value = '';
+    minPriceInput.value = '';
+    maxPriceInput.value = '';
+    minAreaInput.value = '';
+    maxAreaInput.value = '';
+    minYearInput.value = '';
+    maxYearInput.value = '';
+    renderAds();
+  });
+
+  const linkForm = document.getElementById('linkForm');
+  linkForm.addEventListener('submit', e => {
+    e.preventDefault();
+    const link = linkInput.value.trim();
+    const adData = fetchAdFromLink(link);
+    if(!adData) {
+      alert('لینک نامعتبر است یا اطلاعاتی نمی‌توان دریافت کرد.');
+      return;
+    }
+    // اطمینان از عدم ذخیره تکراری لینک‌ها
+    if(ads.some(ad => ad.link === link)) {
+      alert('این آگهی قبلاً ذخیره شده است.');
+      linkInput.value = '';
+      fetchBtn.disabled = true;
+      return;
+    }
+    ads.unshift(adData);
+    saveAds();
+    linkInput.value = '';
+    fetchBtn.disabled = true;
+    renderAds();
+  });
+
+  renderAds();
+</script>
+</body>
+</html>
+
+
